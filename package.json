@@ -1,6 +1,6 @@
 {
   "name": "@diamondslab/diamonds",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Tools for deploying and interfacing with ERC-2535 Diamond Proxies",
   "repository": "github:diamondslab/diamonds",
   "main": "dist/index.js",
