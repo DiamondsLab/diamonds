@@ -1,6 +1,6 @@
 {
   "name": "@diamondslab/diamonds",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Tools for deploying and interfacing with ERC-2535 Diamond Proxies",
   "repository": "github:diamondslab/diamonds",
   "main": "dist/index.js",
@@ -124,12 +124,8 @@
   },
   "files": [
     "dist/",
-    "src/",
-    "docs/",
-    "examples/",
     "LICENSE",
-    "README.md",
-    "package.json"
+    "README.md"
   ],
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
