@@ -3,7 +3,7 @@
     "allowJs": true,
     "checkJs": false,
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "nodenext",
     "lib": ["ES2022", "DOM"],
     "declaration": true,
     "declarationMap": true,
@@ -16,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "composite": true
   },
   "include": ["./src/**/*"],
