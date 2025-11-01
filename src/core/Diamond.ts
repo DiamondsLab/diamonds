@@ -1,24 +1,21 @@
-import { join } from "path";
-import {
-  DeployedDiamondData,
-  DeployedFacets,
-  DeployedFacet,
-  DeployConfig,
-  FacetsConfig
-} from "../schemas";
-import { CallbackManager } from "./CallbackManager";
-import { JsonRpcProvider, Provider } from "@ethersproject/providers";
 import { Signer } from "ethers";
+import { join } from "path";
 import { DeploymentRepository } from "../repositories/DeploymentRepository";
 import {
+  DeployConfig,
+  DeployedDiamondData,
+  DeployedFacets,
+  FacetsConfig
+} from "../schemas";
+import {
   DiamondConfig,
-  RegistryFacetCutAction,
   FunctionSelectorRegistryEntry,
+  NewDeployedFacet,
   NewDeployedFacets,
-  NewDeployedFacet
+  RegistryFacetCutAction,
+  SupportedProvider
 } from "../types";
-import { ethers } from "ethers";
-import { HardhatEthersProvider } from "@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider";
+import { CallbackManager } from "./CallbackManager";
 
 export class Diamond {
   private static instances: Map<string, Diamond> = new Map();
@@ -38,7 +35,7 @@ export class Diamond {
   private facetsConfig: FacetsConfig;
   private repository: DeploymentRepository;
   public signer: Signer | undefined;
-  public provider: JsonRpcProvider | Provider | HardhatEthersProvider | undefined;
+  public provider: SupportedProvider | undefined;
   public deployConfig: DeployConfig;
   public newDeployment: boolean = true;
   public initAddress: string | undefined;
@@ -46,11 +43,11 @@ export class Diamond {
   constructor(config: DiamondConfig, repository: DeploymentRepository) {
     this.config = config;
     this.diamondName = config.diamondName;
-    this.networkName = config.networkName || "hardhat";
-    this.chainId = config.chainId || 31337;
-    this.deploymentsPath = config.deploymentsPath || "diamonds";
-    this.contractsPath = config.contractsPath || "contracts";
-    this.diamondAbiFileName = config.diamondAbiFileName || config.diamondName;
+    this.networkName = config.networkName ?? "hardhat";
+    this.chainId = config.chainId ?? 31337;
+    this.deploymentsPath = config.deploymentsPath ?? "diamonds";
+    this.contractsPath = config.contractsPath ?? "contracts";
+    this.diamondAbiFileName = config.diamondAbiFileName ?? config.diamondName;
     
     // Set diamond ABI path - default to diamond-abi subdirectory of configFilePath directory
     if (config.diamondAbiPath) {
@@ -84,14 +81,14 @@ export class Diamond {
   ) {
     const diamondConfig: DiamondConfig = diamond.getDiamondConfig();
     const deployedDiamondData: DeployedDiamondData = diamond.getDeployedDiamondData();
-    const deployedFacets: DeployedFacets = deployedDiamondData.DeployedFacets || {};
+    const deployedFacets: DeployedFacets = deployedDiamondData.DeployedFacets ?? {};
 
     for (const [facetName, { address: contractAddress, funcSelectors: selectors }] of Object.entries(deployedFacets)) {
       console.log(facetName);
       for (const selector of selectors!) {
         this.functionSelectorRegistry.set(selector, {
           facetName,
-          priority: this.facetsConfig[facetName]?.priority! || 1000,
+          priority: this.facetsConfig[facetName]?.priority! ?? 1000,
           address: contractAddress!,
           action: RegistryFacetCutAction.Deployed,
         });
@@ -116,7 +113,7 @@ export class Diamond {
   public newDeployedFacets: NewDeployedFacets = {};
 
   public getNewDeployedFacets(): NewDeployedFacets {
-    return this.newDeployedFacets || {};
+    return this.newDeployedFacets ?? {};
   }
 
   public updateNewDeployedFacets(facetName: string, facet: NewDeployedFacet): void {
@@ -148,11 +145,11 @@ export class Diamond {
     return this.facetsConfig;
   }
 
-  public setProvider(provider: JsonRpcProvider | Provider | HardhatEthersProvider): void {
+  public setProvider(provider: SupportedProvider): void {
     this.provider = provider;
   }
 
-  public getProvider(): JsonRpcProvider | Provider | HardhatEthersProvider | undefined {
+  public getProvider(): SupportedProvider | undefined {
     return this.provider;
   }
 

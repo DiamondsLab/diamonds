@@ -1,7 +1,14 @@
 import { JsonRpcProvider } from "ethers";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { DeploymentRepository } from "../repositories";
-import { Diamond } from "../core";
+
+/**
+ * Supported provider types for diamond deployments
+ * This union type handles different provider implementations used across the ecosystem
+ * 
+ * Note: We use `any` for HardhatEthersProvider to avoid module resolution issues in monorepo
+ * setups where multiple packages may have different versions of @nomicfoundation/hardhat-ethers
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SupportedProvider = JsonRpcProvider | any;
 
 export interface DiamondPathsConfig {
   deploymentsPath?: string;
