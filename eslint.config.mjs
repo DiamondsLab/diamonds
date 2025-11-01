@@ -47,9 +47,55 @@ export default [
     },
   },
 
-  // TypeScript files configuration
+  // Test files - use tsconfig.dev.json which includes test directory
+  // Must come before general TypeScript config to match first
   {
-    files: ["**/*.ts"],
+    files: ["test/**/*.ts", "scripts/**/*.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+        ...globals.node,
+      },
+      parser: tsParser,
+      ecmaVersion: 2021,
+      sourceType: "module",
+      parserOptions: {
+        // Don't use project for test files to avoid tsconfig issues
+      },
+    },
+    plugins: {
+      "@typescript-eslint": typescriptEslint,
+      security: security,
+      prettier: prettier,
+    },
+    rules: {
+      // Prettier
+      ...prettierConfig.rules,
+      "prettier/prettier": "error",
+
+      // TypeScript recommended overrides
+      "@typescript-eslint/no-namespace": "off",
+      "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+
+      // Relaxed rules for test files
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+
+      // Security rules
+      "security/detect-object-injection": "off", // Common in test fixtures
+      "security/detect-non-literal-regexp": "off",
+
+      // General code quality
+      "no-console": "off",
+      "no-debugger": "error",
+    },
+  },
+
+  // TypeScript files configuration (src directory)
+  {
+    files: ["src/**/*.ts"],
     ignores: ["hardhat.config.ts"],
     languageOptions: {
       globals: {

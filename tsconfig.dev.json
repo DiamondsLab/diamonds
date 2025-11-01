@@ -3,6 +3,8 @@
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
+    "outDir": null,
+    "rootDir": ".",
     "rootDirs": ["./src", "./test", "./scripts"]
   },
   "include": [
