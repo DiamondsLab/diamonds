@@ -46,7 +46,7 @@ export class FileDeploymentRepository implements DeploymentRepository {
   }
 
   loadDeployedDiamondData(): DeployedDiamondData {
-    return readDeployFile(this.deployedDiamondDataFilePath, this.writeDeployedDiamondData);
+    return readDeployFile(this.deployedDiamondDataFilePath, false); // Never create file during load
   }
 
   saveDeployedDiamondData(info: DeployedDiamondData): void {
