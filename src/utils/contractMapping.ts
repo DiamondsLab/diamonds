@@ -161,17 +161,28 @@ export async function getDiamondContractName(diamondName: string, diamond?: Diam
         if (gnusAiFqn) {
           try {
             await artifacts.readArtifact(gnusAiFqn);
-            return gnusAiFqn.split(':')[1]; // Return just the contract name part
+            return gnusAiFqn; // Return the fully qualified name
           } catch (fqnError) {
             // Continue to fallback
           }
         }
         
-        // If no gnus-ai version, try the first available
+        // If no gnus-ai version, prefer non-diamond-abi artifacts for deployment
+        const nonDiamondAbiFqn = fqnMatches.find((fqn: string) => !fqn.includes('diamond-abi'));
+        if (nonDiamondAbiFqn) {
+          try {
+            await artifacts.readArtifact(nonDiamondAbiFqn);
+            return nonDiamondAbiFqn; // Return the fully qualified name
+          } catch (fqnError) {
+            // Continue to fallback
+          }
+        }
+        
+        // Fallback: try the first available
         for (const fqn of fqnMatches) {
           try {
             await artifacts.readArtifact(fqn);
-            return fqn.split(':')[1]; // Return just the contract name part
+            return fqn; // Return the fully qualified name
           } catch (fqnError) {
             // Continue to next option
           }

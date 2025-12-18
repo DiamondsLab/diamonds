@@ -1,9 +1,9 @@
-import { DeploymentRepository } from './DeploymentRepository';
-import { DeployedDiamondData, DeployConfig } from '../schemas';
-import { readDeployFile, writeDeployInfo, readDeployConfig } from './jsonFileHandler';
-import { DiamondConfig } from '../types';
-import { join } from 'path';
 import chalk from 'chalk';
+import { join } from 'path';
+import { DeployConfig, DeployedDiamondData } from '../schemas';
+import { DiamondConfig } from '../types';
+import { DeploymentRepository } from './DeploymentRepository';
+import { readDeployConfig, readDeployFile, writeDeployInfo } from './jsonFileHandler';
 
 export class FileDeploymentRepository implements DeploymentRepository {
   private deploymentDataPath: string;
@@ -47,6 +47,7 @@ export class FileDeploymentRepository implements DeploymentRepository {
 
   loadDeployedDiamondData(): DeployedDiamondData {
     return readDeployFile(this.deployedDiamondDataFilePath, false); // Never create file during load
+    // return readDeployFile(this.deployedDiamondDataFilePath, this.writeDeployedDiamondData); // Create file if allowed
   }
 
   saveDeployedDiamondData(info: DeployedDiamondData): void {
