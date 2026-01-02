@@ -220,6 +220,23 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 					}
 				}
 
+				// Apply deployInclude filter to only include specified selectors
+				const includeFuncSelectors =
+					facetConfig.versions?.[upgradeVersionKey]?.deployInclude || [];
+				if (includeFuncSelectors.length > 0) {
+					// Convert include signatures to selectors
+					const includeSelectors = includeFuncSelectors.map((sig) =>
+						ethers.id(sig).slice(0, 10),
+					);
+					// Filter facetSelectors to only include the specified ones
+					const filteredSelectors = facetSelectors.filter((selector) =>
+						includeSelectors.includes(selector),
+					);
+					// Replace facetSelectors with filtered list
+					facetSelectors.length = 0;
+					facetSelectors.push(...filteredSelectors);
+				}
+
 				// Initializer function Registry
 				const deployInit = facetConfig.versions?.[upgradeVersionKey]?.deployInit || '';
 				const upgradeInit = facetConfig.versions?.[upgradeVersionKey]?.upgradeInit || '';
@@ -308,6 +325,15 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 			const priority: number = newFacetData.priority;
 			const includeFuncSelectors: string[] = newFacetData.deployInclude || [];
 			const excludeFuncSelectors: string[] = newFacetData.deployExclude || [];
+
+			// Convert function signatures to selectors
+			const includeFuncSelectorsAsSelectors = includeFuncSelectors.map((sig) =>
+				ethers.id(sig).slice(0, 10),
+			);
+			const excludeFuncSelectorsAsSelectors = excludeFuncSelectors.map((sig) =>
+				ethers.id(sig).slice(0, 10),
+			);
+
 			// Initialize funcSelectors if not present
 			if (!newFacetData.funcSelectors) {
 				newFacetData.funcSelectors = [];
@@ -315,7 +341,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 			const functionSelectors: string[] = newFacetData.funcSelectors;
 
 			/* ------------------ Exclusion Filter ------------------ */
-			for (const excludeFuncSelector of excludeFuncSelectors) {
+			for (const excludeFuncSelector of excludeFuncSelectorsAsSelectors) {
 				// remove from the facets functionSelectors
 				if (functionSelectors.includes(excludeFuncSelector)) {
 					functionSelectors.splice(functionSelectors.indexOf(excludeFuncSelector), 1);
@@ -352,7 +378,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 				);
 
 			/* ------------------ Inclusion Override Filter ------------------ */
-			for (const includeFuncSelector of includeFuncSelectors) {
+			for (const includeFuncSelector of includeFuncSelectorsAsSelectors) {
 				// Force Replace if already registered by higher priority facet
 				const higherPriorityFacet = Object.keys(registryHigherPrioritySplit).find(
 					(facetName) => {
