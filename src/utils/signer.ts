@@ -1,6 +1,6 @@
 import hre from 'hardhat';
 import { toWei } from './common';
-import { JsonRpcProvider, Signer } from 'ethers';
+import { JsonRpcProvider, JsonRpcSigner, Signer } from 'ethers';
 import '@nomicfoundation/hardhat-ethers';
 import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider';
 
@@ -14,7 +14,10 @@ import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/
 export async function impersonateSigner(signerAddress: string, provider: JsonRpcProvider): Promise<Signer> {
   // Request Hardhat to impersonate the account at the specified address
   await provider.send("hardhat_impersonateAccount", [signerAddress]);
-  return provider.getSigner(signerAddress); // Return the impersonated signer
+  // Construct the signer directly. ethers v6 `provider.getSigner(addr)` validates the
+  // address against `eth_accounts` and throws "invalid account" for impersonated accounts
+  // (impersonation does NOT add the account to `eth_accounts`).
+  return new JsonRpcSigner(provider, signerAddress); // Return the impersonated signer
 }
 
 /**
@@ -41,7 +44,13 @@ export async function setEtherBalance(address: string, amount: bigint, provider:
 export async function impersonateAndFundSigner(deployerAddress: string, provider: JsonRpcProvider | HardhatEthersProvider): Promise<Signer> {
   try {
     await provider.send('hardhat_impersonateAccount', [deployerAddress]);
-    const signer = provider.getSigner(deployerAddress);
+    // For an ethers JsonRpcProvider, construct the signer directly: ethers v6
+    // `getSigner(addr)` validates against `eth_accounts` and throws "invalid account"
+    // for impersonated accounts. HardhatEthersProvider has no such issue, so keep its path.
+    const signer =
+      provider instanceof JsonRpcProvider
+        ? new JsonRpcSigner(provider, deployerAddress)
+        : await provider.getSigner(deployerAddress);
 
     // Fund the account
     await provider.send('hardhat_setBalance', [deployerAddress, '0x56BC75E2D63100000']);
