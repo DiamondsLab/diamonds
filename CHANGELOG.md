@@ -20,18 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `JsonRpcProvider` instead of calling `getSigner()`, which throws "invalid account"
   for impersonated accounts under ethers v6.
 - **TypeScript:** Removed `downlevelIteration` from `tsconfig.json`.
+- **Build:** `build` now runs `rimraf dist tsconfig.tsbuildinfo && tsc`, so a stale
+  incremental cache can no longer produce an empty `dist/` (e.g. after `rm -rf dist`).
+- **`diamond-abi` CLI:** Restored — the source had been accidentally deleted by an
+  unrelated commit. It now ships as a working `bin`: moved to `src/cli/diamond-abi-cli.ts`
+  (so it compiles into `dist/cli/`), Hardhat is loaded lazily so `validate` and `compare`
+  run without a chain, and `bin` points at `dist/cli/diamond-abi-cli.js`. The previous
+  `bin` (`dist/scripts/diamond-abi-cli.js`) was never produced and never worked.
 
 ### Added
 
 - `LICENSE` file (MIT). It was declared in `package.json` (`license` + `files[]`) but
   was missing from the package.
 
-### Removed
+### Changed
 
-- Dropped the broken `diamond-abi` `bin` entry. It pointed at
-  `dist/scripts/diamond-abi-cli.js`, which is never produced (no CLI source exists and
-  `tsconfig` compiles only `src/`), so `npx diamond-abi` failed with a missing-file
-  error. Diamond ABI generation remains available via the `hardhat diamond:generate-abi`
-  task.
+- Rewrote `README.md` and corrected docs: package name `@geniusventures/diamonds` →
+  `@diamondslab/diamonds`, `yarn` commands instead of `npm`, all imports use the package
+  root (the `/strategies` and `/utils` subpaths are not exported), and
+  `OZDefenderDeploymentStrategy` is marked legacy.
 
 [1.3.3]: https://github.com/DiamondsLab/diamonds/compare/v1.3.2...v1.3.3

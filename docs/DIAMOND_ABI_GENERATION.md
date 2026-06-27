@@ -45,8 +45,8 @@ This document summarizes the comprehensive Diamond ABI generation system that ha
 
 ### Scripts and Tools
 
-- `scripts/diamond-abi-cli.ts` - Professional CLI tool
-- `scripts/create-diamond-abi.ts` - Updated ABI generation script
+- `src/cli/diamond-abi-cli.ts` - CLI tool (published as the `diamond-abi` bin)
+- `src/utils/diamondAbiGenerator.ts` - Core ABI generation logic (`generateDiamondAbi`, `previewDiamondAbi`, `DiamondAbiGenerator`)
 
 ### Testing Infrastructure
 
@@ -64,16 +64,19 @@ This document summarizes the comprehensive Diamond ABI generation system that ha
 
 ```typescript
 class DiamondAbiGenerator {
-  constructor(diamond: Diamond, options?: DiamondAbiGeneratorOptions)
-  
+  constructor(diamond: Diamond, options?: DiamondAbiGeneratorOptions);
+
   // Core functionality
-  generateAbi(options?: GenerateAbiOptions): Promise<DiamondAbiResult>
-  previewAbi(cuts: FacetCut[], options?: GenerateAbiOptions): Promise<DiamondAbiResult>
-  
+  generateAbi(options?: GenerateAbiOptions): Promise<DiamondAbiResult>;
+  previewAbi(
+    cuts: FacetCut[],
+    options?: GenerateAbiOptions,
+  ): Promise<DiamondAbiResult>;
+
   // Configuration
-  setFacetFilter(filter: (facetName: string) => boolean): void
-  setIncludeSourceInfo(include: boolean): void
-  setValidateSelectors(validate: boolean): void
+  setFacetFilter(filter: (facetName: string) => boolean): void;
+  setIncludeSourceInfo(include: boolean): void;
+  setValidateSelectors(validate: boolean): void;
 }
 ```
 
@@ -81,8 +84,15 @@ class DiamondAbiGenerator {
 
 ```typescript
 // High-level functions for easy use
-export function generateDiamondAbi(diamond: Diamond, options?: GenerateAbiOptions): Promise<DiamondAbiResult>
-export function previewDiamondAbi(diamond: Diamond, cuts: FacetCut[], options?: GenerateAbiOptions): Promise<DiamondAbiResult>
+export function generateDiamondAbi(
+  diamond: Diamond,
+  options?: GenerateAbiOptions,
+): Promise<DiamondAbiResult>;
+export function previewDiamondAbi(
+  diamond: Diamond,
+  cuts: FacetCut[],
+  options?: GenerateAbiOptions,
+): Promise<DiamondAbiResult>;
 ```
 
 ### CLI Commands
@@ -133,13 +143,13 @@ diamond-abi validate <file>
 ### Programmatic Usage
 
 ```typescript
-import { generateDiamondAbi, Diamond } from 'diamonds';
+import { generateDiamondAbi, Diamond } from "diamonds";
 
 const diamond = new Diamond(config, repository);
 const result = await generateDiamondAbi(diamond, {
-  outputDir: './artifacts/diamond-abi',
+  outputDir: "./artifacts/diamond-abi",
   includeSourceInfo: true,
-  validateSelectors: true
+  validateSelectors: true,
 });
 ```
 
