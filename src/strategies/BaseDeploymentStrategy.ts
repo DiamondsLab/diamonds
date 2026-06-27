@@ -385,7 +385,24 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 						return registryHigherPrioritySplit[facetName].includes(includeFuncSelector);
 					},
 				);
+				const existingEntry = registry.get(includeFuncSelector);
 				if (higherPriorityFacet) {
+					registry.set(includeFuncSelector, {
+						priority: priority,
+						address: currentFacetAddress,
+						action: RegistryFacetCutAction.Replace,
+						facetName: newFacetName,
+					});
+				} else if (
+					existingEntry &&
+					existingEntry.address &&
+					existingEntry.address !== currentFacetAddress &&
+					existingEntry.action !== RegistryFacetCutAction.Add
+				) {
+					// Selector is already registered/deployed at a different facet address
+					// (a selector moved between facets, or a redeployed facet at a new
+					// address). Reconcile against that on-chain/registered state -> Replace,
+					// not Add (which would revert: "Can't add function that already exists").
 					registry.set(includeFuncSelector, {
 						priority: priority,
 						address: currentFacetAddress,
