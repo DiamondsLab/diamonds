@@ -29,7 +29,9 @@
     "diamond",
     "diamond-proxy",
     "diamond-upgradeable",
-    "blockchain"
+    "blockchain",
+    "erc-2535",
+    "eip-2535"
   ],
   "bugs": {
     "url": "https://github.com/diamondslab/diamonds/issues"
@@ -40,7 +42,7 @@
     "test:integration": "hardhat test test/integration/**/*.test.ts --config hardhat.config.ts",
     "test:coverage": "hardhat coverage --config hardhat.config.ts",
     "test:performance": "hardhat test test/integration/performance/**/*.test.ts --config hardhat.config.ts",
-    "build": "npx tsc",
+    "build": "rimraf dist tsconfig.tsbuildinfo && tsc",
     "clean": "rimraf artifacts/* cache/* diamond-abi/* typechain-types/* diamond-typechain-types/*",
     "compile": "npx hardhat compile --config hardhat.config.ts && yarn diamond:generate-abi-typechain",
     "clean-compile": "yarn clean && yarn compile",
@@ -122,9 +124,6 @@
     "perf:benchmark": "bash scripts/devops/devcontainer-performance-benchmark.sh all --environment native",
     "perf:benchmark:container": "bash scripts/devops/devcontainer-performance-benchmark.sh all --environment container",
     "perf:compare": "bash scripts/devops/devcontainer-performance-benchmark.sh compare"
-  },
-  "bin": {
-    "diamond-abi": "dist/scripts/diamond-abi-cli.js"
   },
   "files": [
     "dist/",
