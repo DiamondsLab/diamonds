@@ -95,9 +95,8 @@ describe('selectorResolution (M1-E2 unit oracle tests)', () => {
 			expect(out).to.have.members([SEL_EXCLUDE, SEL_INCLUDE]);
 		});
 
-		// INV-3 additivity — RED at HEAD: deployInclude is a whitelist that drops the facet's
-		// other selectors. The oracle (additive) keeps them. TODO(M2): make deployInclude additive.
-		it('INV-3 additivity: deployInclude keeps the facet other selectors [RED -> M2]', () => {
+		// INV-3 additivity (M2-E1 ✅): deployInclude is additive — it keeps the facet's other selectors.
+		it('INV-3 additivity: deployInclude keeps the facet other selectors (additive)', () => {
 			const out = computeFacetSelectors([SEL_INCLUDE, SEL_EXCLUDE], ['testDeployInclude()'], []);
 			// Additive oracle: with no higher-priority competitor, the facet still owns SEL_EXCLUDE.
 			expect(out).to.have.members([SEL_INCLUDE, SEL_EXCLUDE]);

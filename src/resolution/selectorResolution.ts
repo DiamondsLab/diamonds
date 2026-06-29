@@ -12,14 +12,13 @@ import {
  * unit-tested without a chain and later promoted into the shared core used by both the
  * deployment strategy and the planned pre-launch config validator.
  *
- * IMPORTANT (behavior-preserving): this module is a **verbatim** lift of the existing
- * logic. It deliberately keeps:
- *   - the deploy-time `deployInclude` **whitelist** (drops a facet's other selectors) —
- *     M2 makes this additive (INV-3);
- *   - the inverted/dead `registryHigherPrioritySplit` (`entry.priority > priority`) —
+ * Lifted from the strategy in M1-E1 (behavior-preserving). Status of the original quirks:
+ *   - the deploy-time `deployInclude` whitelist — **REMOVED in M2-E1**: `deployInclude` is now
+ *     **additive** (INV-3); a facet keeps its other selectors (the override is resolved below);
+ *   - the inverted/dead `registryHigherPrioritySplit` (`entry.priority > priority`) — still present,
  *     M3 removes it;
- *   - the `5b2f7af` `Replace`-instead-of-`Add` branch — M3 reconciles it.
- * Do not "fix" anything here; those changes belong to M2/M3 against this seam.
+ *   - the `5b2f7af` `Replace`-instead-of-`Add` branch — still present, M3 reconciles it.
+ * Do not change the override / dead code / 5b2f7af here; those belong to M3.
  *
  * The module takes NO Hardhat/provider dependency (only `ethers` for selector math).
  */
@@ -38,39 +37,32 @@ export type PriorDeployedState = Record<
 >;
 
 /**
- * Apply a facet's `deployExclude` (removal) then `deployInclude` (whitelist) to its raw
- * ABI selectors. Pure — extracted verbatim from `BaseDeploymentStrategy.deployFacetsTasks`.
+ * Compute a facet's candidate selectors: its raw ABI selectors **minus `deployExclude`**.
  *
- * NOTE (M1-E1): `deployInclude` acts as a WHITELIST here (drops the facet's other
- * selectors). M2 makes this additive (INV-3). Do not change here.
+ * `deployInclude` is **additive** (INV-3, M2-E1) — it does NOT reduce the candidate set; a facet keeps
+ * its other selectors. The override (force-ownership over a higher-priority facet) and the additive
+ * priority resolution both happen in `resolveFunctionSelectorRegistry`. Pure.
  *
- * @param facetSelectors the facet's raw ABI function selectors (4-byte, `0x…`)
- * @param deployInclude  function signatures to whitelist (e.g. `"foo()"`)
- * @param deployExclude  function signatures to remove
- * @returns the resolved selector list (a new array; the input is not mutated)
+ * @param facetSelectors  the facet's raw ABI function selectors (4-byte, `0x…`)
+ * @param _deployInclude  the facet's `deployInclude` signatures — accepted for API symmetry; additive
+ *                        (not used to filter the candidate set)
+ * @param deployExclude   function signatures to remove
+ * @returns the candidate selector list (a new array; the input is not mutated)
  */
 export function computeFacetSelectors(
 	facetSelectors: string[],
-	deployInclude: string[],
+	_deployInclude: string[],
 	deployExclude: string[],
 ): string[] {
 	const result = [...facetSelectors];
 
-	// Apply deployExclude filter to remove selectors before storing
+	// Apply deployExclude (removal) only. deployInclude is additive — it does not filter here.
 	for (const excludeSelector of deployExclude) {
 		const selectorToExclude = ethers.id(excludeSelector).slice(0, 10);
 		const index = result.indexOf(selectorToExclude);
 		if (index !== -1) {
 			result.splice(index, 1);
 		}
-	}
-
-	// Apply deployInclude filter to only include specified selectors
-	if (deployInclude.length > 0) {
-		// Convert include signatures to selectors
-		const includeSelectors = deployInclude.map((sig) => ethers.id(sig).slice(0, 10));
-		// Filter facetSelectors to only include the specified ones
-		return result.filter((selector) => includeSelectors.includes(selector));
 	}
 
 	return result;
