@@ -15,10 +15,10 @@ import {
  * Lifted from the strategy in M1-E1 (behavior-preserving). Status of the original quirks:
  *   - the deploy-time `deployInclude` whitelist — **REMOVED in M2-E1**: `deployInclude` is now
  *     **additive** (INV-3); a facet keeps its other selectors (the override is resolved below);
- *   - the inverted/dead `registryHigherPrioritySplit` (`entry.priority > priority`) — still present,
- *     M3 removes it;
+ *   - the inverted/dead `registryHigherPrioritySplit` (`entry.priority > priority`) — **REMOVED in
+ *     M3-E3**: it never matched a real conflict; the cases it nominally handled fall through to the
+ *     `5b2f7af` Replace branch with the identical result;
  *   - the `5b2f7af` `Replace`-instead-of-`Add` branch — **verified correct (M3-E1 S-1)**; kept as-is.
- * The inverted `higherPrioritySplit` is still dead — M3-E3 removes it.
  *
  * The module takes NO Hardhat/provider dependency (only `ethers` for selector math).
  */
@@ -141,45 +141,18 @@ export function resolveFunctionSelectorRegistry(args: ResolveRegistryArgs): void
 			}
 		}
 
-		/* ------------ Higher Priority Split of Registry ------------------ */
-		const registryHigherPrioritySplit = Array.from(registry.entries())
-			.filter(([_, entry]) => entry.priority > priority)
-			.reduce(
-				(acc, [selector, entry]) => {
-					if (!acc[entry.facetName]) {
-						acc[entry.facetName] = [];
-					}
-					acc[entry.facetName].push(selector);
-					return acc;
-				},
-				{} as Record<string, string[]>,
-			);
-
 		/* ------------------ Inclusion Override Filter ------------------ */
 		for (const includeFuncSelector of includeFuncSelectorsAsSelectors) {
-			// Force Replace if already registered by higher priority facet
-			const higherPriorityFacet = Object.keys(registryHigherPrioritySplit).find(
-				(facetName) => {
-					return registryHigherPrioritySplit[facetName].includes(includeFuncSelector);
-				},
-			);
 			const existingEntry = registry.get(includeFuncSelector);
-			if (higherPriorityFacet) {
-				registry.set(includeFuncSelector, {
-					priority: priority,
-					address: currentFacetAddress,
-					action: RegistryFacetCutAction.Replace,
-					facetName: newFacetName,
-				});
-			} else if (
+			if (
 				existingEntry?.address &&
 				existingEntry.address !== currentFacetAddress &&
 				existingEntry.action !== RegistryFacetCutAction.Add
 			) {
-				// Selector is already registered/deployed at a different facet address
-				// (a selector moved between facets, or a redeployed facet at a new
-				// address). Reconcile against that on-chain/registered state -> Replace,
-				// not Add (which would revert: "Can't add function that already exists").
+				// Selector already registered/deployed at a different facet address — a selector moved
+				// facets, or a redeployed facet at a new address (the upgrade case; verified M3-E1 S-1).
+				// Reconcile -> Replace, not Add (which would revert "Can't add function that already
+				// exists"). Subsumes the removed dead higherPrioritySplit branch (M3-E3).
 				registry.set(includeFuncSelector, {
 					priority: priority,
 					address: currentFacetAddress,
