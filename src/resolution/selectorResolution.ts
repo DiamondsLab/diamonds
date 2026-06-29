@@ -17,8 +17,8 @@ import {
  *     **additive** (INV-3); a facet keeps its other selectors (the override is resolved below);
  *   - the inverted/dead `registryHigherPrioritySplit` (`entry.priority > priority`) — still present,
  *     M3 removes it;
- *   - the `5b2f7af` `Replace`-instead-of-`Add` branch — still present, M3 reconciles it.
- * Do not change the override / dead code / 5b2f7af here; those belong to M3.
+ *   - the `5b2f7af` `Replace`-instead-of-`Add` branch — **verified correct (M3-E1 S-1)**; kept as-is.
+ * The inverted `higherPrioritySplit` is still dead — M3-E3 removes it.
  *
  * The module takes NO Hardhat/provider dependency (only `ethers` for selector math).
  */
@@ -131,7 +131,9 @@ export function resolveFunctionSelectorRegistry(args: ResolveRegistryArgs): void
 				if (existing?.facetName === newFacetName) {
 					registry.set(excludeFuncSelector, {
 						priority: priority,
-						address: currentFacetAddress,
+						// EIP-2535: a Remove cut MUST use address(0) (M3-E2 fix for M3-E1 S-3 —
+						// was currentFacetAddress, which reverts on-chain on deployExclude-on-upgrade).
+						address: zeroAddress,
 						action: RegistryFacetCutAction.Remove,
 						facetName: newFacetName,
 					});
