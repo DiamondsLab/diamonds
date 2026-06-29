@@ -1243,7 +1243,7 @@ __metadata:
     ts-node: ^10.0.0
     typescript: ^5.0.0
   bin:
-    diamond-abi: dist/scripts/diamond-abi-cli.js
+    diamond-abi: dist/cli/diamond-abi-cli.js
   languageName: unknown
   linkType: soft
 
