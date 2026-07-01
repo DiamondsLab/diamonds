@@ -2,7 +2,7 @@ import hre from 'hardhat';
 import "@nomicfoundation/hardhat-ethers";
 import { debug } from 'debug';
 import { TransactionReceipt, Interface, Fragment, ContractInterface, ContractTransaction } from "ethers";
-import { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
+import type { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
 import chalk from 'chalk';
 import { Artifact } from "hardhat/types";
 import { DeployedDiamondData } from "../schemas";
