@@ -19,6 +19,7 @@ import {
 	getDiamondContractName,
 	logTx,
 } from '../utils';
+import { computeFacetSelectors, resolveFunctionSelectorRegistry } from '../resolution';
 import { DeploymentStrategy } from './DeploymentStrategy';
 
 export class BaseDeploymentStrategy implements DeploymentStrategy {
@@ -209,33 +210,20 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 					facetSelectors.push(func.selector);
 				});
 
-				// Apply deployExclude filter to remove selectors before storing
+				// Apply deployExclude (removal) + deployInclude (whitelist) via the pure
+				// resolution core. Behavior-preserving (M1-E1); deployInclude stays a
+				// whitelist here — M2 makes it additive.
 				const excludeFuncSelectors =
 					facetConfig.versions?.[upgradeVersionKey]?.deployExclude || [];
-				for (const excludeSelector of excludeFuncSelectors) {
-					const selectorToExclude = ethers.id(excludeSelector).slice(0, 10);
-					const index = facetSelectors.indexOf(selectorToExclude);
-					if (index !== -1) {
-						facetSelectors.splice(index, 1);
-					}
-				}
-
-				// Apply deployInclude filter to only include specified selectors
 				const includeFuncSelectors =
 					facetConfig.versions?.[upgradeVersionKey]?.deployInclude || [];
-				if (includeFuncSelectors.length > 0) {
-					// Convert include signatures to selectors
-					const includeSelectors = includeFuncSelectors.map((sig) =>
-						ethers.id(sig).slice(0, 10),
-					);
-					// Filter facetSelectors to only include the specified ones
-					const filteredSelectors = facetSelectors.filter((selector) =>
-						includeSelectors.includes(selector),
-					);
-					// Replace facetSelectors with filtered list
-					facetSelectors.length = 0;
-					facetSelectors.push(...filteredSelectors);
-				}
+				const resolvedFacetSelectors = computeFacetSelectors(
+					facetSelectors,
+					includeFuncSelectors,
+					excludeFuncSelectors,
+				);
+				facetSelectors.length = 0;
+				facetSelectors.push(...resolvedFacetSelectors);
 
 				// Initializer function Registry
 				const deployInit = facetConfig.versions?.[upgradeVersionKey]?.deployInit || '';
@@ -312,171 +300,14 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 	}
 
 	protected async updateFunctionSelectorRegistryTasks(diamond: Diamond): Promise<void> {
-		const registry = diamond.functionSelectorRegistry;
-		const zeroAddress = ethers.ZeroAddress;
-
-		const newDeployedFacets = diamond.getNewDeployedFacets();
-		const newDeployedFacetsByPriority = Object.entries(newDeployedFacets).sort(
-			([, a], [, b]) => (a.priority || 1000) - (b.priority || 1000),
-		);
-
-		for (const [newFacetName, newFacetData] of newDeployedFacetsByPriority) {
-			const currentFacetAddress = newFacetData.address;
-			const priority: number = newFacetData.priority;
-			const includeFuncSelectors: string[] = newFacetData.deployInclude || [];
-			const excludeFuncSelectors: string[] = newFacetData.deployExclude || [];
-
-			// Convert function signatures to selectors
-			const includeFuncSelectorsAsSelectors = includeFuncSelectors.map((sig) =>
-				ethers.id(sig).slice(0, 10),
-			);
-			const excludeFuncSelectorsAsSelectors = excludeFuncSelectors.map((sig) =>
-				ethers.id(sig).slice(0, 10),
-			);
-
-			// Initialize funcSelectors if not present
-			if (!newFacetData.funcSelectors) {
-				newFacetData.funcSelectors = [];
-			}
-			const functionSelectors: string[] = newFacetData.funcSelectors;
-
-			/* ------------------ Exclusion Filter ------------------ */
-			for (const excludeFuncSelector of excludeFuncSelectorsAsSelectors) {
-				// remove from the facets functionSelectors
-				if (functionSelectors.includes(excludeFuncSelector)) {
-					functionSelectors.splice(functionSelectors.indexOf(excludeFuncSelector), 1);
-				}
-				// update action to remove if excluded from registry where a previous deployment associated with facetname
-				if (
-					registry.has(excludeFuncSelector) &&
-					registry.get(excludeFuncSelector)?.facetName === newFacetName
-				) {
-					const existing = registry.get(excludeFuncSelector);
-					if (existing?.facetName === newFacetName) {
-						registry.set(excludeFuncSelector, {
-							priority: priority,
-							address: currentFacetAddress,
-							action: RegistryFacetCutAction.Remove,
-							facetName: newFacetName,
-						});
-					}
-				}
-			}
-
-			/* ------------ Higher Priority Split of Registry ------------------ */
-			const registryHigherPrioritySplit = Array.from(registry.entries())
-				.filter(([_, entry]) => entry.priority > priority)
-				.reduce(
-					(acc, [selector, entry]) => {
-						if (!acc[entry.facetName]) {
-							acc[entry.facetName] = [];
-						}
-						acc[entry.facetName].push(selector);
-						return acc;
-					},
-					{} as Record<string, string[]>,
-				);
-
-			/* ------------------ Inclusion Override Filter ------------------ */
-			for (const includeFuncSelector of includeFuncSelectorsAsSelectors) {
-				// Force Replace if already registered by higher priority facet
-				const higherPriorityFacet = Object.keys(registryHigherPrioritySplit).find(
-					(facetName) => {
-						return registryHigherPrioritySplit[facetName].includes(includeFuncSelector);
-					},
-				);
-				if (higherPriorityFacet) {
-					registry.set(includeFuncSelector, {
-						priority: priority,
-						address: currentFacetAddress,
-						action: RegistryFacetCutAction.Replace,
-						facetName: newFacetName,
-					});
-				} else {
-					// Add to the registry
-					registry.set(includeFuncSelector, {
-						priority: priority,
-						address: currentFacetAddress,
-						action: RegistryFacetCutAction.Add,
-						facetName: newFacetName,
-					});
-				}
-
-				// remove from the funcSels so it is not modified in Priority Resolution Pass
-				const existing = newDeployedFacets[newFacetName];
-				if (
-					existing &&
-					existing.funcSelectors &&
-					existing.funcSelectors.includes(includeFuncSelector)
-				) {
-					existing.funcSelectors.splice(
-						existing.funcSelectors.indexOf(includeFuncSelector),
-						1,
-					);
-				}
-			}
-
-			/* ------------------ Replace Facet and Priority Resolution Pass ------------- */
-			for (const selector of functionSelectors) {
-				const existing = registry.get(selector);
-				if (existing) {
-					const existingPriority = existing.priority;
-
-					if (existing.facetName === newFacetName) {
-						// Same facet, update the address
-						registry.set(selector, {
-							priority: priority,
-							address: currentFacetAddress,
-							action: RegistryFacetCutAction.Replace,
-							facetName: newFacetName,
-						});
-					} else if (priority < existingPriority) {
-						// Current facet has higher priority, Replace it
-						registry.set(selector, {
-							priority: priority,
-							address: currentFacetAddress,
-							action: RegistryFacetCutAction.Replace,
-							facetName: newFacetName,
-						});
-					}
-				} else {
-					// New selector, simply add
-					registry.set(selector, {
-						priority: priority,
-						address: currentFacetAddress,
-						action: RegistryFacetCutAction.Add,
-						facetName: newFacetName,
-					});
-				}
-			}
-
-			/* ---------------- Remove Old Function Selectors from facets -------------- */
-			// Set functionselectors with the newFacetName and still different address to Remove
-			for (const [selector, entry] of registry.entries()) {
-				if (entry.facetName === newFacetName && entry.address !== currentFacetAddress) {
-					registry.set(selector, {
-						priority: entry.priority,
-						address: zeroAddress,
-						action: RegistryFacetCutAction.Remove,
-						facetName: newFacetName,
-					});
-				}
-			}
-		}
-
-		// `Remove` function selectors for facets no longer in config (deleted facets)
-		const facetsConfig = diamond.getDeployConfig().facets;
-		const facetNames = Object.keys(facetsConfig);
-		for (const [selector, entry] of registry.entries()) {
-			if (!facetNames.includes(entry.facetName)) {
-				registry.set(selector, {
-					priority: entry.priority,
-					address: zeroAddress,
-					action: RegistryFacetCutAction.Remove,
-					facetName: entry.facetName,
-				});
-			}
-		}
+		// Delegates to the pure resolution core (M1-E1). Behavior-preserving: the dead
+		// `higherPrioritySplit` and the `5b2f7af` Replace branch live there verbatim and are
+		// reconciled in M3. The registry Map is mutated in place, exactly as before.
+		resolveFunctionSelectorRegistry({
+			registry: diamond.functionSelectorRegistry,
+			newDeployedFacets: diamond.getNewDeployedFacets(),
+			facetNames: Object.keys(diamond.getDeployConfig().facets),
+		});
 	}
 
 	async postUpdateFunctionSelectorRegistry(diamond: Diamond): Promise<void> {

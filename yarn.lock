@@ -1163,7 +1163,7 @@ __metadata:
     "@ethersproject/providers": "npm:^5.8.0"
     "@gnus.ai/contracts-upgradeable-diamond": "npm:=4.5.0"
     "@nomicfoundation/hardhat-chai-matchers": "npm:^2.0.0"
-    "@nomicfoundation/hardhat-ethers": "npm:^3.0.0"
+    "@nomicfoundation/hardhat-ethers": "npm:^3.1.2"
     "@nomicfoundation/hardhat-ignition": "npm:^0.15.0"
     "@nomicfoundation/hardhat-ignition-ethers": "npm:^0.15.0"
     "@nomicfoundation/hardhat-network-helpers": "npm:^1.0.0"
@@ -1243,7 +1243,7 @@ __metadata:
     ts-node: ^10.0.0
     typescript: ^5.0.0
   bin:
-    diamond-abi: dist/scripts/diamond-abi-cli.js
+    diamond-abi: dist/cli/diamond-abi-cli.js
   languageName: unknown
   linkType: soft
 
@@ -2479,16 +2479,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomicfoundation/hardhat-ethers@npm:^3.0.0":
-  version: 3.1.0
-  resolution: "@nomicfoundation/hardhat-ethers@npm:3.1.0"
+"@nomicfoundation/hardhat-ethers@npm:^3.1.2":
+  version: 3.1.3
+  resolution: "@nomicfoundation/hardhat-ethers@npm:3.1.3"
   dependencies:
     debug: "npm:^4.1.1"
     lodash.isequal: "npm:^4.5.0"
   peerDependencies:
     ethers: ^6.14.0
-    hardhat: ^2.26.0
-  checksum: 10c0/66c5c9f9dd56f1cea25f5c9890f99251fd3179090bb0ad3f73fc1184e4a8ceaba544b5165d3f67e500cf0047d1550350e80df10e28cbabae3d61a659826163ae
+    hardhat: ^2.28.0
+  checksum: 10c0/77a20741634a4028324cf329cac28205eff4a318ab92b0f42af4e714ebaab97a760bdba551fec446f4cea171a8964a6a89d19f33105fb8c8538d779a8a975093
   languageName: node
   linkType: hard
 

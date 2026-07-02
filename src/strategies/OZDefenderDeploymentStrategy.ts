@@ -1,9 +1,9 @@
-import { Defender } from '@openzeppelin/defender-sdk';
-import { DeployContractRequest, DeploymentResponse, DeploymentStatus } from '@openzeppelin/defender-sdk-deploy-client';
-import {
+import type { Defender } from '@openzeppelin/defender-sdk';
+import type { DeployContractRequest, DeploymentResponse, DeploymentStatus } from '@openzeppelin/defender-sdk-deploy-client';
+import type {
   CreateProposalRequest
 } from '@openzeppelin/defender-sdk-proposal-client';
-import {
+import type {
   ExternalApiCreateProposalRequest
 } from "@openzeppelin/defender-sdk-proposal-client/lib/models/proposal";
 import chalk from 'chalk';
@@ -37,7 +37,17 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     customClient?: Defender // Optional for testing
   ) {
     super(verbose);
-    this.client = customClient || new Defender({ apiKey, apiSecret });
+    // Lazily require the deprecated Defender SDK (an optional dependency) so that
+    // importing this strategy — or the package barrel that re-exports it — never
+    // pulls @openzeppelin/defender-sdk in for consumers who don't use the OZDefender
+    // path. It is only needed when actually constructing a real client.
+    if (customClient) {
+      this.client = customClient;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { Defender } = require('@openzeppelin/defender-sdk');
+      this.client = new Defender({ apiKey, apiSecret });
+    }
     // this.proposalClient = new ProposalClient({ apiKey, apiSecret });
     this.relayerAddress = relayerAddress;
     this.via = via;
