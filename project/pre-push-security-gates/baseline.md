@@ -80,3 +80,26 @@ This is **not a blanket security waiver**: `npm audit` (real dependency risk —
 - **Tests:** `npm run test:unit` → **19 passing / 0 failing** ✅ — **no regression** (removing 0-import deps can't affect tests; build confirms compilation).
 - **Test-count clarification:** the "51/0" recorded above was carried over from the **`feature/resolution-seam`** branch (which adds the deployInclude resolution-seam unit tests — PR #12, not yet on `main`). This project's branch (`chore/pre-push-security-gates`) is off **`main`**, where `test:unit` = **19/0**. Not a regression — a branch difference.
 - **✅ Milestone M1 DONE:** audit gate green (26 → 0), no residual, build + tests green, no source change.
+
+---
+
+## M2 — Semgrep triage (M2-E1, 2026-07-03)
+
+All 10 findings = `typescript-any-usage` in `src/cli/diamond-abi-cli.ts` (a CLI `bin` tool, not runtime app code). Per-site classification:
+
+| Line | What the `any` is | Fixable with a real type? | Proposed disposition |
+|------|-------------------|---------------------------|----------------------|
+| 348 | ethers `Fragment` in `.filter(f => f.type==='function')` | ✅ | type `f: Fragment` (ethers) |
+| 350 | ethers `Fragment` in `.forEach` | ✅ | type `f: Fragment` |
+| 355 | ethers `Fragment` in `.filter` | ✅ | type `f: Fragment` |
+| 359 | ethers `Fragment` in `.filter` | ✅ | type `f: Fragment` |
+| 375 | `hre: any` — runtime `hre.ethers` added by hardhat-ethers (**already commented**) | ⚠️ justified | keep + `// nosemgrep: typescript-any-usage` (or type as `HardhatRuntimeEnvironment`) |
+| 394 | `result: any` — ABI-generation result (`.stats.*`) | ✅ | the generator's result type |
+| 474 | `artifact: any` — hardhat artifact (`.abi`) | ✅ | hardhat `Artifact` (or `{ abi?: unknown[] }`) |
+| 477 | ABI JSON `item` in `.filter` | ~ | minimal `{ type: string }` type, or `// nosemgrep` |
+| 478 | ABI JSON `item` in `.filter` | ~ | same |
+| 479 | ABI JSON `item` in `.filter` | ~ | same |
+
+**Counts:** 6 cleanly fixable (348/350/355/359/394/474), 3 loosely-typed ABI items (477–479, fixable with a tiny type or annotate), 1 genuinely-justified (`hre`, 375).
+
+**Recommended posture (owner decision):** **mix — fix + annotate.** Fix the 6 clean ones with real types (`Fragment`, `Artifact`, the result type) + type the 3 ABI-item filters with a minimal `{ type: string }`; keep `hre: any` with an inline `// nosemgrep` (its comment already justifies it). This clears the gate *and* improves real type safety, with only one suppression. Alternatives: **annotate-all** (fastest — 10× `// nosemgrep`, no type work) or **tune-the-rule** (exclude `src/cli/**` from `typescript-any-usage` in `.semgrep.yml` — fast but disables the rule for all CLI code).
