@@ -50,3 +50,17 @@ Captured 2026-07-03 via the M0-E1 invocations. Confirmed against the **committed
 `@diamondslab/diamonds` is a **TypeScript library/tool**, not a smart-contract product. The in-repo Solidity contracts (`contracts/`) exist **only as test fixtures** for exercising the tooling. Contract-security analyzers (slither; any Solidity-targeting semgrep rules) are therefore applied with that lens — they are **not appropriate release gates** for a tooling repo. This is the shared justification cited by **M3** (removing slither as a blocking gate) and by **M2** for scoping any Solidity rule that fires on fixtures.
 
 This is **not a blanket security waiver**: `npm audit` (real dependency risk — and it's *worse* than first thought, 26 advisories) and semgrep's **TypeScript** rules on **product code** (`src/`) stay fully enforced. *(Note: the current 10 semgrep findings are all `typescript-any-usage` in product code, so **none** are scoped out by this rationale — it currently applies only to slither.)*
+
+---
+
+## M1 — Audit remediation triage (M1-E1, 2026-07-03)
+
+**Unused confirmation (widened):** `axios` + `lodash` have **0 usages** across `src`/`scripts`/`test`, **0** in config files (`hardhat.config.ts`, `tsconfig*.json`, `.mocharc*`), and are **not re-exported** by `src/index` or `package.json` `exports`. `yarn why axios` and `yarn why lodash` both show **`@diamondslab/diamonds@workspace:.` as the sole (direct) dependent** — nothing else pulls them.
+
+**Advisory enumeration (26 total):** every advisory's vulnerable package **is `axios` or `lodash` itself** (not a transitive dep beneath them):
+| Package | Advisories | Severity | Dependent | Direct/Transitive | Clears on removal? |
+|---------|-----------|----------|-----------|-------------------|--------------------|
+| `axios` (`1.12.2`) | 23 (ids 1116673, 1117574–1117595, 1117858, 1118607, 1119404, 1119667, 1120125, 1120547, 1120643–1120652) | mostly high | `@diamondslab/diamonds` (only) | **Direct** | ✅ yes |
+| `lodash` (`4.17.21`) | 3 (1115806, 1115810, 1120370) | moderate | `@diamondslab/diamonds` (only) | **Direct** | ✅ yes |
+
+**✅ GO — clears-on-removal: ALL 26.** Removing `axios` + `lodash` from `dependencies` clears every advisory. **0 residual transitive advisories expected** → the M1-E3 owner gate **OP-M1-1 will not fire** unless the post-removal re-audit surprises us.
