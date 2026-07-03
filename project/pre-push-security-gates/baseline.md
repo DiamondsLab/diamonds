@@ -64,3 +64,11 @@ This is **not a blanket security waiver**: `npm audit` (real dependency risk —
 | `lodash` (`4.17.21`) | 3 (1115806, 1115810, 1120370) | moderate | `@diamondslab/diamonds` (only) | **Direct** | ✅ yes |
 
 **✅ GO — clears-on-removal: ALL 26.** Removing `axios` + `lodash` from `dependencies` clears every advisory. **0 residual transitive advisories expected** → the M1-E3 owner gate **OP-M1-1 will not fire** unless the post-removal re-audit surprises us.
+
+### M1-E2 result (2026-07-03): audit gate GREEN
+
+- Removed `axios` + `lodash` from `packages/diamonds/package.json` `dependencies` (2 lines); regenerated the lockfile from a clean committed base (`git checkout yarn.lock` → standalone `yarn install`).
+- **`yarn npm audit --severity moderate` → exit 0 (26 → 0 advisories).** The audit gate passes.
+- **Nuance:** `yarn why axios`/`lodash` still show them in the tree (transitive pulls via **devDependencies** — e.g. tooling). They are no longer **direct production dependencies**, so the production audit ignores them and the **published package no longer ships them** — which is exactly what the gate (and consumers) care about. *(The hook's `yarn npm audit --severity moderate` does not audit the dev-transitive tree; if `--all` were ever added it could resurface — out of scope here.)*
+- **0 residual advisories** → M1-E3 is verification-only; **OP-M1-1 does not fire.**
+- Diff scoped to `package.json` (2 lines) + `yarn.lock` (regenerated); no source change.
