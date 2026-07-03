@@ -72,3 +72,11 @@ This is **not a blanket security waiver**: `npm audit` (real dependency risk —
 - **Nuance:** `yarn why axios`/`lodash` still show them in the tree (transitive pulls via **devDependencies** — e.g. tooling). They are no longer **direct production dependencies**, so the production audit ignores them and the **published package no longer ships them** — which is exactly what the gate (and consumers) care about. *(The hook's `yarn npm audit --severity moderate` does not audit the dev-transitive tree; if `--all` were ever added it could resurface — out of scope here.)*
 - **0 residual advisories** → M1-E3 is verification-only; **OP-M1-1 does not fire.**
 - Diff scoped to `package.json` (2 lines) + `yarn.lock` (regenerated); no source change.
+
+### M1-E3 verification — M1 CLOSED (2026-07-03)
+
+- **Audit gate:** `yarn npm audit --severity moderate` → exit 0 ✅
+- **Build:** `npm run build` → exit 0 (green) ✅
+- **Tests:** `npm run test:unit` → **19 passing / 0 failing** ✅ — **no regression** (removing 0-import deps can't affect tests; build confirms compilation).
+- **Test-count clarification:** the "51/0" recorded above was carried over from the **`feature/resolution-seam`** branch (which adds the deployInclude resolution-seam unit tests — PR #12, not yet on `main`). This project's branch (`chore/pre-push-security-gates`) is off **`main`**, where `test:unit` = **19/0**. Not a regression — a branch difference.
+- **✅ Milestone M1 DONE:** audit gate green (26 → 0), no residual, build + tests green, no source change.
