@@ -24,8 +24,29 @@ How to run each `.husky/pre-push` gate **inside the devcontainer** without tripp
 
 ## Findings (M0-E2)
 
-*To be appended by M0-E2 — per-gate current findings (audit advisory ids, the 10 semgrep findings by rule/file/line, git-secrets clean, slither best-effort, tests count).*
+Captured 2026-07-03 via the M0-E1 invocations. Confirmed against the **committed** `yarn.lock` (the working-tree `yarn.lock` has a small unrelated diff that does **not** change the audit result).
+
+### npm audit — ⚠️ 26 advisories: **13 high + 13 moderate**
+- **Primary packages:** `axios` and `lodash` (+ transitive).
+- lodash: prototype pollution — ids `1115810`, `1120370` (moderate); `lodash@4.17.21`, **no upstream 4.x patch**.
+- axios (+ others): ids include `1116673`, `1117574` (moderate), `1117576`/`1117591`/`1117593`/`1117858`/`1118607`/`1119667`/`1120547`/`1120643`/`1120645`/`1120647` (high), etc.
+- **⚠️ Correction to the project plan:** M1 was scoped as "2 lodash moderate → remove unused lodash." That "2" was a **truncation artifact** of the planning-phase scoping (`| tail -25`). The real audit gate is **26 advisories including 13 high**. **M1 must be re-scoped** to real dependency remediation (notably an `axios` upgrade + transitive fixes, plus lodash), not just removing lodash — see [project plan §5 M1](pre-push-security-gates-project-plan.md).
+
+### semgrep — 10 findings, **all `typescript-any-usage`**, all in `src/cli/diamond-abi-cli.ts`
+| # | rule id | file:line | prelim. class |
+|---|---------|-----------|---------------|
+| 1–10 | `typescript-any-usage` | `src/cli/diamond-abi-cli.ts` : 348, 350, 355, 359, 375, 394, 474, 477, 478, 479 | TS / `any` (code-quality) |
+
+- **Not** Solidity-security rules on fixtures (the plan speculated that). All 10 are `any`-usage in one product-code CLI file. **Refines M2:** fix/annotate the 10 `any` usages, or tune the `typescript-any-usage` rule. Classes are *preliminary* — M2-E1 is authoritative.
+
+### git-secrets — clean (exit 0, no output).
+
+### slither (best-effort, not hardened) — **errors**: `crytic-compile KeyError: 'output'`; does not run cleanly in-container → evidence for the **M3** decommission.
+
+### tests — `yarn test` trips the yarn state bug; alt `npx hardhat test`; known submodule result **51/0**. Leaves the push gate in **M4**.
 
 ## Tooling-repo rationale (M0-E2)
 
-*To be appended by M0-E2 — the shared justification (diamonds is a TS tool; in-repo contracts are test fixtures) cited by M2 (semgrep scoping) and M3 (slither removal).*
+`@diamondslab/diamonds` is a **TypeScript library/tool**, not a smart-contract product. The in-repo Solidity contracts (`contracts/`) exist **only as test fixtures** for exercising the tooling. Contract-security analyzers (slither; any Solidity-targeting semgrep rules) are therefore applied with that lens — they are **not appropriate release gates** for a tooling repo. This is the shared justification cited by **M3** (removing slither as a blocking gate) and by **M2** for scoping any Solidity rule that fires on fixtures.
+
+This is **not a blanket security waiver**: `npm audit` (real dependency risk — and it's *worse* than first thought, 26 advisories) and semgrep's **TypeScript** rules on **product code** (`src/`) stay fully enforced. *(Note: the current 10 semgrep findings are all `typescript-any-usage` in product code, so **none** are scoped out by this rationale — it currently applies only to slither.)*
