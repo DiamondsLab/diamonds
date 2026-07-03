@@ -13,7 +13,7 @@ Work is decomposed into **milestones** (`M0`…`M4`, zero-indexed; `M0` = ground
 
 | # | Objective | Measurable definition of done |
 |---|-----------|-------------------------------|
-| O1 | **npm audit gate green** | `yarn npm audit --severity moderate` exits 0 (the 2 lodash advisories cleared) |
+| O1 | **npm audit gate green** | `yarn npm audit --severity moderate` exits 0 (all **26** advisories — 13 high + 13 moderate, axios+lodash+transitive — cleared) |
 | O2 | **semgrep gate green** | `yarn semgrep:scan` exits 0 (0 blocking findings) — real issues fixed, non-applicable rules scoped/annotated with rationale |
 | O3 | **slither gate removed** | slither is no longer a blocking pre-push step; removal is documented (tooling repo; contracts are test-only fixtures) |
 | O4 | **git-secrets gate green** | `yarn git-secrets:scan` clean (already passing — guard against regression) |
@@ -35,7 +35,7 @@ Work is decomposed into **milestones** (`M0`…`M4`, zero-indexed; `M0` = ground
 | ID | Title | Outcome | Impact / Risk |
 |----|-------|---------|---------------|
 | **M0** | Baseline & Reliable Scan Harness | Every pre-push gate reproducible in-container; all current findings enumerated + baselined | Low — read-only groundwork |
-| **M1** | Audit Gate: Eliminate lodash | `yarn npm audit` green (unused lodash dep removed) | Low — likely dep removal only |
+| **M1** | Audit Gate: Remove Unused Vulnerable Deps | `yarn npm audit` green (**26** advisories cleared: 13 high + 13 moderate) | Low-Med — **axios + lodash are unused direct deps** (removable, no breaking upgrade); residual transitive advisories triaged |
 | **M2** | Semgrep Gate: Triage, Scope, Fix | `yarn semgrep:scan` green (real fixes + non-applicable rules scoped) | Med — touches src + ruleset |
 | **M3** | Decommission Slither | slither removed as a blocking gate, documented | Low — policy + hook/config edit |
 | **M4** | Lean, Resilient Hook | Hook runs in-container (audit+semgrep+secrets); tests+slither dropped from the gate; protected-branch push succeeds unbypassed | Med — hook redesign + outward-facing push |
@@ -44,7 +44,7 @@ Work is decomposed into **milestones** (`M0`…`M4`, zero-indexed; `M0` = ground
 
 ```
 M0 baseline ──► M1 audit ──► M2 semgrep ──► M3 slither ──► M4 hook ──► ✅ unbypassed push
-   (harness)     (lodash)     (triage)      (remove)      (lean+proof)
+   (harness)     (unused-deps) (triage)      (remove)      (lean+proof)
 ```
 
 ## 5. Milestones & epics
@@ -56,20 +56,20 @@ M0 baseline ──► M1 audit ──► M2 semgrep ──► M3 slither ──�
 | Epic | Title | Summary | Owner | Impact |
 |------|-------|---------|-------|--------|
 | M0-E1 | Reproduce gates in-container | For each gate, find a reliable invocation that avoids `yarn <script>` (direct `semgrep`/`slither`/`git secrets`/`npm audit` or `npm run`); confirm each runs | Engineer | Groundwork |
-| M0-E2 | Findings baseline | Enumerate every current blocking finding (audit: 2 lodash; semgrep: 10 / 6 rules; slither: TBD; secrets: clean; tests: 51/0) into `baseline.md`; write the shared **tooling-repo rationale** note reused by M2/M3 | Engineer | Reference |
+| M0-E2 | Findings baseline | Enumerate every current blocking finding (audit: **26 — 13 high/13 mod, axios+lodash**; semgrep: **10, all `typescript-any-usage`** in `diamond-abi-cli.ts`; slither: errors; secrets: clean; tests: 51/0) into `baseline.md`; write the shared **tooling-repo rationale** note reused by M2/M3 | Engineer | Reference | *(DONE 2026-07-03)* |
 
-### M1 — Audit Gate: Eliminate lodash
-**Goal:** Clear the two moderate lodash prototype-pollution advisories so `yarn npm audit --severity moderate` passes. `src/` has **0** lodash imports → lodash is an **unused direct dependency**.
-**Exit criteria:** `yarn npm audit --severity moderate` → 0 findings; `yarn build` + `yarn test` still green; lockfile regenerated.
+### M1 — Audit Gate: Remove Unused Vulnerable Deps + Residual Remediation
+**Goal:** Clear **all 26 npm-audit advisories** (13 high + 13 moderate) so `yarn npm audit --severity moderate` passes. **Root cause:** `axios` (`1.12.2`, ~23 advisories) and `lodash` (`4.17.21`, ~3) are both direct `dependencies` with **0 imports** across `src`/`scripts`/`test` → **unused, removable with no code or breaking-change impact.** *(Baseline correction: the earlier "2 lodash" figure was a truncated-output artifact — see M0 `baseline.md`.)*
+**Exit criteria:** `yarn npm audit --severity moderate` → 0 findings; `yarn build` + `yarn test` still green; lockfile regenerated; any **residual (transitive)** advisory documented + resolved or accepted (owner sign-off).
 
 | Epic | Title | Summary | Owner | Impact |
 |------|-------|---------|-------|--------|
-| M1-E1 | Inventory lodash usage | Confirm no runtime usage across `src/`, `scripts/`, `test/`, configs (src already shows 0). Identify any residual usage | Engineer | Small |
-| M1-E2 | Remove (or replace) lodash | If unused: remove `lodash` from `dependencies` + regenerate lock. If a real usage exists: replace with native ES equivalents (owner term "escompat" — **verify** whether that names a real package or means native ES; default to native ES) | Engineer | Small |
-| M1-E3 | Verify audit + build/test | `yarn npm audit --severity moderate` clean; build + tests green; no new advisories introduced | Engineer | Small |
+| M1-E1 | Confirm unused + enumerate | Confirm `axios`+`lodash` have 0 usages anywhere (baseline: src/scripts/test = 0); from `baseline.md` list all 26 by package/severity; flag any advisory whose dependent is **transitive** (won't clear on direct removal) | Engineer | Ref |
+| M1-E2 | Remove unused deps | Remove `axios` + `lodash` from `dependencies`; regenerate lock; re-audit | Engineer | Small |
+| M1-E3 | Residual + verify | Resolve any residual transitive advisory (upgrade / `resolutions`) or document accepted-risk with **owner sign-off**; confirm `yarn npm audit --severity moderate` = 0; build + tests green | Engineer + Owner | Small-Med |
 
 ### M2 — Semgrep Gate: Triage, Scope, Fix
-**Goal:** Take `yarn semgrep:scan` to 0 blocking findings via triage (fix genuine issues; scope/annotate non-applicable rules). The 10 findings come from a **custom `.semgrep.yml`** whose rules are mostly Solidity-security (reentrancy, access-control, unsafe-external-call, …) plus `typescript-any-usage`.
+**Goal:** Take `yarn semgrep:scan` to 0 blocking findings via triage (fix genuine issues; scope/annotate non-applicable rules). *(Baseline refinement: all **10 current findings are `typescript-any-usage`** in one product file, `src/cli/diamond-abi-cli.ts` — **not** Solidity rules on fixtures. So M2 is TS `any` cleanup/annotation or tuning that one rule; the custom `.semgrep.yml` also carries Solidity-security rules (reentrancy, access-control, …), and the fixtures-scoping path below applies only if those ever fire.)*
 **Exit criteria:** `yarn semgrep:scan` exits 0; every suppressed/scoped finding has a written justification; genuine code issues fixed.
 
 | Epic | Title | Summary | Owner | Impact |
@@ -116,8 +116,8 @@ M0 baseline ──► M1 audit ──► M2 semgrep ──► M3 slither ──�
 | Risk | Likelihood | Impact | Mitigation | Owner |
 |------|-----------|--------|------------|-------|
 | Removing slither / scoping semgrep hides a *real* issue | Med | Med | Document rationale; retain semgrep+audit; CI can re-add contract analysis later if the repo ever ships contracts | Engineer |
-| lodash is used somewhere not grepped (transitive/dynamic) | Low | Low | M1-E1 inventory across src/scripts/test before removal; audit + tests confirm | Engineer |
-| "escompat" is not a real package | Med | Low | Verify in M1; default to native ES; likely moot (lodash unused) | Engineer |
+| axios/lodash needed transitively (removing the direct dep doesn't clear the advisory) | Med | Low | M1-E1 flags transitive-dependent advisories; those get a `resolutions`/upgrade or a documented accepted-risk (M1-E3, owner sign-off) | Engineer |
+| Removing a direct dep breaks a build/test path that used it implicitly | Low | Med | src/scripts/test show 0 imports; M1-E3 re-runs build + tests after removal | Engineer |
 | Tests dropped from the push gate with no CI backstop (CI out of scope) | Med | Med | Enforcement stays with the monorepo suite (220/40/0) + manual `yarn test`; document that pushes no longer run tests | Engineer |
 | Lean local hook misses something the full suite caught | Med | Low | CI is the authoritative heavy gate; local hook is fast + resilient, not the sole line | Engineer |
 | Protected-branch push has other server-side rules (branch protection) | Low | Med | M4-E4 is Owner-run; surface any server-side rejection rather than force | Owner |
@@ -128,7 +128,7 @@ M0 baseline ──► M1 audit ──► M2 semgrep ──► M3 slither ──�
 | Milestone | Primary rollback lever |
 |-----------|------------------------|
 | M0 | None needed (read-only; baseline doc only) |
-| M1 | Revert the `package.json`/lockfile commit (re-add lodash) |
+| M1 | Revert the `package.json`/lockfile commit (restore axios + lodash) |
 | M2 | Revert `.semgrep.yml` + code commits; findings return but nothing else breaks |
 | M3 | Re-add the slither step to `.husky/pre-push` + restore config/scripts from git |
 | M4 | Revert the hook redesign commit (restores prior `.husky/*`); delete the CI workflow; no push is forced until the hook is green |
@@ -136,7 +136,7 @@ M0 baseline ──► M1 audit ──► M2 semgrep ──► M3 slither ──�
 ## 10. Deliverables checklist (project-level)
 
 - [ ] `M0` `baseline.md` — current findings + reliable in-container invocations + tooling-repo rationale
-- [ ] `M1` lodash removed; `yarn npm audit --severity moderate` green; lock regenerated
+- [ ] `M1` unused axios + lodash removed; all 26 advisories cleared; `yarn npm audit --severity moderate` green; lock regenerated; residual/accepted advisories documented
 - [ ] `M2` `.semgrep.yml` scoped + code fixed/annotated; `yarn semgrep:scan` green with documented suppressions
 - [ ] `M3` slither removed from hook + `security-check`; decommission rationale doc; config/scripts fate recorded
 - [ ] `M4` lean resilient `.husky/pre-push` + `.husky/pre-commit` (tests+slither off the gate); **unbypassed protected-branch push succeeds**
@@ -144,7 +144,7 @@ M0 baseline ──► M1 audit ──► M2 semgrep ──► M3 slither ──�
 
 ## 11. Open questions
 
-1. **"escompat"** — is this a specific package you want, or shorthand for native ES replacements? (Likely moot — lodash appears unused; M1-E1 confirms.)
+1. **Unused-dep removal** — `axios` + `lodash` are unused direct deps (0 imports); M1 removes them. Confirm no out-of-band consumer relies on `@diamondslab/diamonds` re-exporting them transitively. *(The earlier "escompat" question is moot — this is removal, not replacement.)*
 2. **Slither artifacts** — keep `slither.config.json` + `slither:scan`/`slither:check` as *optional manual* tools, or remove them entirely? (Decided in M3-E1.)
 3. **Which protected branch** for the M4-E3 acceptance push — `main`, `develop`, or both? Any server-side branch-protection rules to account for?
 
