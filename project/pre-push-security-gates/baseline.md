@@ -103,3 +103,12 @@ All 10 findings = `typescript-any-usage` in `src/cli/diamond-abi-cli.ts` (a CLI 
 **Counts:** 6 cleanly fixable (348/350/355/359/394/474), 3 loosely-typed ABI items (477–479, fixable with a tiny type or annotate), 1 genuinely-justified (`hre`, 375).
 
 **Recommended posture (owner decision):** **mix — fix + annotate.** Fix the 6 clean ones with real types (`Fragment`, `Artifact`, the result type) + type the 3 ABI-item filters with a minimal `{ type: string }`; keep `hre: any` with an inline `// nosemgrep` (its comment already justifies it). This clears the gate *and* improves real type safety, with only one suppression. Alternatives: **annotate-all** (fastest — 10× `// nosemgrep`, no type work) or **tune-the-rule** (exclude `src/cli/**` from `typescript-any-usage` in `.semgrep.yml` — fast but disables the rule for all CLI code).
+
+### M2-E2 result (2026-07-03): semgrep gate GREEN — M2 CLOSED
+
+Owner chose **mix**. Applied in `src/cli/diamond-abi-cli.ts` (type-level, no runtime change):
+- **8 sites fixed** (mostly via inference — no new imports): 348/350/355/359 dropped `: any` on the ethers `Fragment` callbacks (`fragments` is already `Fragment[]`; `(f as any).format()` → `f.format()`); 474 typed `artifact: { abi?: { type: string }[] }` so 477/478/479's `item` infers (their `: any` removed).
+- **2 sites annotated** (genuinely dynamic; the file already declares `any` intentional via an `eslint-disable` header): `hre` (375) and the dynamic `result` shape (394) each carry an inline `// nosemgrep: typescript-any-usage -- <reason>`.
+- *(Deviation from the per-line recommendation: `result` (394) was **annotated** rather than force-typed — it reads 6+ loosely-typed fields and the file intentionally uses `any` for arbitrary ABI/JSON. Still faithful to the mix posture.)*
+- **`yarn semgrep:scan` (with `--error`) → exit 0, 0 findings.** `npm run build` green; `npm run test:unit` 19/0 (no regression). Diff: `src/cli/diamond-abi-cli.ts` only (11+/9−).
+- **✅ Milestone M2 DONE:** semgrep gate green.
