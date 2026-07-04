@@ -112,3 +112,16 @@ Owner chose **mix**. Applied in `src/cli/diamond-abi-cli.ts` (type-level, no run
 - *(Deviation from the per-line recommendation: `result` (394) was **annotated** rather than force-typed — it reads 6+ loosely-typed fields and the file intentionally uses `any` for arbitrary ABI/JSON. Still faithful to the mix posture.)*
 - **`yarn semgrep:scan` (with `--error`) → exit 0, 0 findings.** `npm run build` green; `npm run test:unit` 19/0 (no regression). Diff: `src/cli/diamond-abi-cli.ts` only (11+/9−).
 - **✅ Milestone M2 DONE:** semgrep gate green.
+
+---
+
+## M3 — Slither decommissioned (M3-E1, 2026-07-04)
+
+**Rationale (owner-decided, "3D"):** `@diamondslab/diamonds` is a **TypeScript tool**, not a smart-contract product; the in-repo Solidity contracts (`contracts/`) exist only as **test fixtures**. A contract static-analyzer is therefore not an appropriate **release gate** for this repo. Reinforced by the M0 baseline: `yarn slither:scan` **errors in-container** (crytic-compile `KeyError: 'output'`) — it can't even run. (Cites the M0 tooling-repo rationale above.)
+
+**Applied:**
+- Removed the slither block from `.husky/pre-push` (replaced with a decommission comment; **no `yarn slither:scan` invocation remains** in the hook).
+- Removed `yarn slither:scan` from the `security-check` aggregate in `package.json`.
+- **Kept** (owner choice A — optional-manual): the `slither:scan` + `slither:check` scripts and `slither.config.json` — runnable by hand if diamonds ever ships real contracts, but out of every gate.
+- **Not weakened silently:** audit + semgrep + git-secrets remain enforced; this removes an inappropriate + non-functional gate, documented here.
+- **✅ Milestone M3 DONE:** slither is no longer a blocking gate.
