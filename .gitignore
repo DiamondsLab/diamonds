@@ -64,8 +64,9 @@ typings/
 flat
 .ignore
 
-# local notes
-notes
+# local notes (runbook is tracked; everything else stays local)
+notes/*
+!notes/RELEASE_RUNBOOK.md
 
 .tmp-test-integration
 jest.config.js
