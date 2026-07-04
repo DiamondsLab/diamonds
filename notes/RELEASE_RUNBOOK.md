@@ -25,8 +25,8 @@ admin + npm `@diamondslab` access (privileged — do **not** automate around).
       pending formatting backlog — see the CI note in `.github/workflows/ci.yml`.*)
 - [ ] CI green on the release branch (Actions tab).
       **Package-specific:** pushing from a local clone runs the **pre-push security
-      hook** (~2+ min; slither currently blocks on pre-existing findings) — pushes may
-      need Owner judgment until the hook rework lands.
+      hook** (~3 min: audit, semgrep, OSV, secrets; slither advisory-only since the
+      security-gates rework merged into the 1.5.0 line).
 - [ ] **[Owner]** npm Trusted Publisher for `@diamondslab/diamonds` bound to
       `DiamondsLab/diamonds` + `release.yml`, **"Allow npm Stage publish" enabled**;
       branch protection + Actions permissions per the fleet `OWNER_GATE_CHECKLIST.md`.
