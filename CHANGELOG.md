@@ -33,6 +33,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package-level `yarn build` / `yarn test` were broken by a stale `yarn.lock`
   (`@diamondslab/hardhat-diamonds` pinned to an old range); lockfile refreshed.
 
+## [1.4.1] - 2026-07-01
+
+### Fixed
+
+- **Standalone imports:** the package is importable outside this monorepo again.
+  `zod` moved from devDependencies to dependencies (the published `.d.ts` files expose
+  zod-derived types that consumers could not resolve), and
+  `@openzeppelin/defender-sdk` is now lazy-loaded on the deprecated OZDefender path
+  (`defenderClients` + `OZDefenderDeploymentStrategy`), so importing the package root
+  no longer requires it. The optional `.env` load is guarded.
+
+## [1.4.0] - 2026-06-30
+
+### Changed
+
+- **Selector resolution:** extracted a pure selector-resolution core
+  (`src/resolution`) behind the deployment strategies, covered by a new unit
+  (oracle) + integration test suite.
+
+### Fixed
+
+- `deployInclude` is now **additive** — listed selectors are added on top of the
+  facet's own selectors instead of replacing them.
+- `deployExclude` on an upgrade now emits the Remove cut with `address(0)` as
+  required by EIP-2535 (it previously used the facet address, producing an
+  invalid cut).
+
+### Removed
+
+- Dead `higherPrioritySplit` branch in the selector-resolution path.
+
 ## [1.3.3] - 2026-06-27
 
 ### Fixed
@@ -68,4 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   root (the `/strategies` and `/utils` subpaths are not exported), and
   `OZDefenderDeploymentStrategy` is marked legacy.
 
+[Unreleased]: https://github.com/DiamondsLab/diamonds/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/DiamondsLab/diamonds/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/DiamondsLab/diamonds/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/DiamondsLab/diamonds/compare/v1.3.2...v1.3.3
