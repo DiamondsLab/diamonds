@@ -5,6 +5,34 @@ All notable changes to `@diamondslab/diamonds` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `exports` back-compat subpaths: `./dist/*` (types + default) and `./package.json`,
+  unblocking deep imports such as `dist/repositories/FileDeploymentRepository`
+  (previously rejected by exports encapsulation).
+- `CHANGELOG.md` now ships in the published tarball (`files` whitelist).
+- `engines` field (`node >=18`, `yarn >=4`).
+
+### Changed
+
+- `package.json` metadata: standard `author` + `contributors` (replaces non-standard
+  `authors` array), object-form `repository` with correct DiamondsLab casing.
+- Single ignore strategy: `.npmignore` removed; anchored `files` whitelist — `npm pack`
+  and `yarn pack` now produce identical tarballs (88 files; previously 171 vs 175).
+- Source maps and declaration maps are no longer emitted or shipped (they referenced
+  a `src/` directory that was never published, so they were broken in consumers).
+
+### Removed
+
+- Legacy `.travis.yml` and `tslint.json`.
+
+### Fixed
+
+- Package-level `yarn build` / `yarn test` were broken by a stale `yarn.lock`
+  (`@diamondslab/hardhat-diamonds` pinned to an old range); lockfile refreshed.
+
 ## [1.3.3] - 2026-06-27
 
 ### Fixed
