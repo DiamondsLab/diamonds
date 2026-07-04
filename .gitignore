@@ -78,3 +78,8 @@ test/.tmp-defender-advanced/
 typechain-types/
 dist/
 .yarn/
+# heavy test/working dirs (M1-E1; existing tracked fixtures under test-deployments remain tracked)
+test-deployments/
+test-integration-deployments/
+test-output/
+temp/
