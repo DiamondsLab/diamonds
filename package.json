@@ -138,9 +138,9 @@
   },
   "files": [
     "dist/",
-    "LICENSE",
-    "README.md",
-    "CHANGELOG.md"
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md"
   ],
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
