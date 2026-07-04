@@ -21,7 +21,12 @@
     "./core": {
       "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
-    }
+    },
+    "./dist/*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    },
+    "./package.json": "./package.json"
   },
   "license": "MIT",
   "keywords": [
@@ -134,7 +139,8 @@
   "files": [
     "dist/",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",

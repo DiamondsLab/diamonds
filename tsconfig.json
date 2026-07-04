@@ -6,9 +6,9 @@
     "module": "nodenext",
     "lib": ["ES2022", "DOM"],
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "inlineSources": true,
+    "declarationMap": false,
+    "sourceMap": false,
+
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./src",
