@@ -1,7 +1,7 @@
 # Diamonds Module
 
-[![npm version](https://badge.fury.io/js/@diamondslab%2Fdiamonds.svg)](https://www.npmjs.com/package/@diamondslab/diamonds)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/%40diamondslab%2Fdiamonds.svg)](https://www.npmjs.com/package/@diamondslab/diamonds)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/DiamondsLab/diamonds/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Hardhat](https://img.shields.io/badge/Hardhat-2.19+-orange.svg)](https://hardhat.org/)
 
@@ -40,13 +40,35 @@ selector management, configuration-driven facet versioning, and ABI tooling.
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- **Node.js ≥ 18**
+- **Yarn ≥ 4** (for developing this repo; npm/pnpm work for consuming the published package)
+
 ### Installation
 
 ```bash
 yarn add @diamondslab/diamonds
+# or
+npm install @diamondslab/diamonds
+
 # peer deps (if not already present)
 yarn add --dev hardhat @nomicfoundation/hardhat-ethers ethers
 ```
+
+### Entry points
+
+The package exposes the following entry points (`exports` in `package.json`):
+
+| Entry point                          | Purpose                                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `@diamondslab/diamonds`              | Main entry — everything documented below is exported here                                         |
+| `@diamondslab/diamonds/core`         | Core classes only (`Diamond`, `DiamondDeployer`, `DeploymentManager`, `CallbackManager`)          |
+| `@diamondslab/diamonds/dist/*`       | Back-compat deep imports, e.g. `@diamondslab/diamonds/dist/repositories/FileDeploymentRepository` |
+| `@diamondslab/diamonds/package.json` | Package metadata (for tooling)                                                                    |
+
+Prefer the root entry point for new code; the `dist/*` subpaths exist so older
+deep imports keep working. Source maps and declaration maps are not shipped.
 
 ### Basic Usage
 
@@ -341,9 +363,12 @@ async function deployBasicDiamond() {
 ### Multi-Facet Upgrade
 
 ```typescript
-async function performUpgrade(diamond: Diamond) {
+async function performUpgrade(
+  diamond: Diamond,
+  repository: FileDeploymentRepository,
+) {
   // Update configuration for the new version
-  const config = diamond.repository.loadDeployConfig();
+  const config = repository.loadDeployConfig();
   config.protocolVersion = 2.0;
 
   // Add a new facet
@@ -360,7 +385,7 @@ async function performUpgrade(diamond: Diamond) {
     fromVersions: [1.0],
   };
 
-  diamond.repository.saveDeployConfig(config);
+  repository.saveDeployConfig(config);
 
   // DiamondDeployer detects the existing deployment and performs the upgrade
   const deployer = new DiamondDeployer(diamond, new LocalDeploymentStrategy());
@@ -423,7 +448,8 @@ yarn lint             # lint
 
 ## 🤝 Contributing
 
-Contributions are welcome. Please open an issue or pull request on
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full
+workflow, and open an issue or pull request on
 [GitHub](https://github.com/DiamondsLab/diamonds).
 
 ```bash
