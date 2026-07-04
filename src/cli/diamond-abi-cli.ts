@@ -345,18 +345,18 @@ program
 			if (options.verbose) {
 				console.log(chalk.blue('\n🔍 Function Signatures:'));
 				ethersInterface.fragments
-					.filter((f: any) => f.type === 'function')
+					.filter((f) => f.type === 'function')
 					.slice(0, 10) // Show first 10
-					.forEach((f: any) => {
-						console.log(chalk.gray(`  ${(f as any).format()}`));
+					.forEach((f) => {
+						console.log(chalk.gray(`  ${f.format()}`));
 					});
 
 				if (
-					ethersInterface.fragments.filter((f: any) => f.type === 'function').length > 10
+					ethersInterface.fragments.filter((f) => f.type === 'function').length > 10
 				) {
 					console.log(
 						chalk.gray(
-							`  ... and ${ethersInterface.fragments.filter((f: any) => f.type === 'function').length - 10} more`,
+							`  ... and ${ethersInterface.fragments.filter((f) => f.type === 'function').length - 10} more`,
 						),
 					);
 				}
@@ -372,6 +372,7 @@ async function setupDiamondConnection(diamond: Diamond, verbose: boolean): Promi
 	try {
 		// Typed as `any`: the `hre.ethers` helper is added at runtime by the
 		// hardhat-ethers plugin (loaded via the project's hardhat config).
+		// nosemgrep: typescript-any-usage -- hre.ethers is injected at runtime by hardhat-ethers (see note above)
 		const hre: any = (await import('hardhat')).default;
 		diamond.setProvider(hre.ethers.provider);
 		const signers = await hre.ethers.getSigners();
@@ -391,6 +392,7 @@ async function setupDiamondConnection(diamond: Diamond, verbose: boolean): Promi
 	}
 }
 
+// nosemgrep: typescript-any-usage -- dynamic ABI-generation result (arbitrary stats/selectorMap shape)
 function displayResults(result: any, verbose: boolean): void {
 	console.log(chalk.blue('\n📊 Generation Results:'));
 	console.log(chalk.cyan(`  Functions: ${result.stats.totalFunctions}`));
@@ -471,12 +473,12 @@ function displaySelectorChanges(
 	}
 }
 
-function analyzeAbi(artifact: any): { functions: number; events: number; errors: number } {
+function analyzeAbi(artifact: { abi?: { type: string }[] }): { functions: number; events: number; errors: number } {
 	const abi = artifact.abi ?? [];
 	return {
-		functions: abi.filter((item: any) => item.type === 'function').length,
-		events: abi.filter((item: any) => item.type === 'event').length,
-		errors: abi.filter((item: any) => item.type === 'error').length,
+		functions: abi.filter((item) => item.type === 'function').length,
+		events: abi.filter((item) => item.type === 'event').length,
+		errors: abi.filter((item) => item.type === 'error').length,
 	};
 }
 

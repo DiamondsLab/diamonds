@@ -4,8 +4,13 @@ import '@nomicfoundation/hardhat-ethers/types';
 import '@nomicfoundation/hardhat-toolbox';
 import { HardhatUserConfig } from 'hardhat/config';
 
-// Load environment variables
-process.loadEnvFile('.env');
+// Load environment variables from a local .env if one exists. Never throw:
+// .env is optional (absent in CI and on Node <20.12 loadEnvFile doesn't exist).
+try {
+	process.loadEnvFile('.env');
+} catch {
+	/* optional */
+}
 
 const {
 	MAINNET_RPC_URL,

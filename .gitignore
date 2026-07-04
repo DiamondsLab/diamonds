@@ -64,8 +64,9 @@ typings/
 flat
 .ignore
 
-# local notes
-notes
+# local notes (runbook is tracked; everything else stays local)
+notes/*
+!notes/RELEASE_RUNBOOK.md
 
 .tmp-test-integration
 jest.config.js
@@ -78,3 +79,8 @@ test/.tmp-defender-advanced/
 typechain-types/
 dist/
 .yarn/
+# heavy test/working dirs (M1-E1; existing tracked fixtures under test-deployments remain tracked)
+test-deployments/
+test-integration-deployments/
+test-output/
+temp/

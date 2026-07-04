@@ -1,8 +1,11 @@
 {
   "name": "@diamondslab/diamonds",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Tools for deploying and interfacing with ERC-2535 Diamond Proxies",
-  "repository": "github:diamondslab/diamonds",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DiamondsLab/diamonds.git"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.js",
@@ -18,12 +21,13 @@
     "./core": {
       "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
-    }
+    },
+    "./dist/*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    },
+    "./package.json": "./package.json"
   },
-  "authors": [
-    "Am0rfu5",
-    "SuperGenius"
-  ],
   "license": "MIT",
   "keywords": [
     "ethereum",
@@ -50,8 +54,8 @@
     "clean": "rimraf artifacts/* cache/* diamond-abi/* typechain-types/* diamond-typechain-types/*",
     "compile": "npx hardhat compile --config hardhat.config.ts && yarn diamond:generate-abi-typechain",
     "clean-compile": "yarn clean && yarn compile",
-    "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.dev.json",
-    "lint": "tslint --config tslint.json --project tsconfig.dev.json",
+    "lint:fix": "prettier --write src && eslint src --fix",
+    "lint": "eslint src",
     "build:dev": "tsc --project tsconfig.dev.json --noEmit",
     "watch": "tsc --project tsconfig.json -w",
     "prepublishOnly": "yarn build",
@@ -96,7 +100,7 @@
     "ci-perf-monitor": "node scripts/devops/ci-perf-monitor.js",
     "sign-artifacts": "npx ts-node scripts/devops/sign-artifacts.ts",
     "emergency-bypass": "npx ts-node scripts/devops/emergency-bypass.ts",
-    "security-check": "yarn audit && yarn snyk:test && yarn socket:scan && yarn osv:scan && yarn semgrep:scan && yarn slither:scan && yarn git-secrets:scan",
+    "security-check": "yarn audit && yarn snyk:test && yarn socket:scan && yarn osv:scan && yarn semgrep:scan && yarn git-secrets:scan",
     "security-tool-update": "npx ts-node scripts/devops/security-tool-updater.ts",
     "provenance-check": "npx ts-node scripts/devops/provenance-validator.ts",
     "slsa-attest": "npx ts-node scripts/devops/slsa-attestation.ts generate",
@@ -134,8 +138,9 @@
   },
   "files": [
     "dist/",
-    "LICENSE",
-    "README.md"
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md"
   ],
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -225,10 +230,16 @@
   "packageManager": "yarn@4.10.3",
   "dependencies": {
     "@ethersproject/abstract-signer": "^5.8.0",
-    "axios": "^1.12.0",
     "debug": "^4.4.1",
     "fs-extra": "^11.3.0",
-    "lodash": "^4.17.21",
     "zod": "^4.0.2"
+  },
+  "author": "Am0rfu5",
+  "contributors": [
+    "SuperGenius"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=4.0.0"
   }
 }

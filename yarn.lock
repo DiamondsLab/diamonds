@@ -1156,7 +1156,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": "npm:^19.8.1"
     "@commitlint/config-conventional": "npm:^19.8.1"
-    "@diamondslab/hardhat-diamonds": "npm:^1.0.0"
+    "@diamondslab/hardhat-diamonds": "npm:^1.2.0"
     "@ethersproject/abi": "npm:^5.8.0"
     "@ethersproject/abstract-signer": "npm:^5.8.0"
     "@ethersproject/bytes": "npm:^5.8.0"
@@ -1192,7 +1192,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.18.1"
     "@typescript-eslint/parser": "npm:^8.18.10"
     abi2oas: "npm:^0.1.4"
-    axios: "npm:^1.12.0"
     chai: "npm:^4.2.0"
     chai-as-promised: "npm:^7.1.1"
     chalk: "npm:^4.1.2"
@@ -1217,7 +1216,6 @@ __metadata:
     jest: "npm:^30.0.4"
     jest-mock: "npm:^29.7.0"
     lint-staged: "npm:^15.2.0"
-    lodash: "npm:^4.17.21"
     mocha: "npm:^9.2.2"
     prettier: "npm:^3.4.2"
     prettier-plugin-solidity: "npm:^1.4.1"
@@ -1247,14 +1245,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@diamondslab/hardhat-diamonds@npm:^1.0.0":
-  version: 1.1.2
-  resolution: "@diamondslab/hardhat-diamonds@npm:1.1.2"
+"@diamondslab/hardhat-diamonds@npm:^1.2.0":
+  version: 1.2.1
+  resolution: "@diamondslab/hardhat-diamonds@npm:1.2.1"
+  dependencies:
+    chalk: "npm:^4.1.2"
   peerDependencies:
-    "@diamondslab/diamonds": ^1.0.0
+    "@diamondslab/diamonds": ^1.4.0
     ethers: ^6.0.0
     hardhat: ^2.0.0
-  checksum: 10c0/2bfad972ab69959e1fa2af8a734a55cfc8a7001a1f3820dfc0729677a5584798e00339aaa25bb68d758387e6011fddc34119239674c12fd42921a69e704a6685
+  checksum: 10c0/d031e9c24e1e7eae3dfa87a3e6cc9b33fcb176be626c6a2a49273331a3a5c1e234d741f092275f9cc322592b2d95046bb04fe8fbe94152a6664096ed0ac4572d
   languageName: node
   linkType: hard
 
@@ -4931,7 +4931,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.12.0, axios@npm:^1.5.1, axios@npm:^1.7.4":
+"axios@npm:^1.5.1, axios@npm:^1.7.4":
   version: 1.12.2
   resolution: "axios@npm:1.12.2"
   dependencies:
