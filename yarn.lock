@@ -1156,7 +1156,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": "npm:^19.8.1"
     "@commitlint/config-conventional": "npm:^19.8.1"
-    "@diamondslab/hardhat-diamonds": "npm:^1.0.0"
+    "@diamondslab/hardhat-diamonds": "npm:^1.2.0"
     "@ethersproject/abi": "npm:^5.8.0"
     "@ethersproject/abstract-signer": "npm:^5.8.0"
     "@ethersproject/bytes": "npm:^5.8.0"
@@ -1247,14 +1247,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@diamondslab/hardhat-diamonds@npm:^1.0.0":
-  version: 1.1.2
-  resolution: "@diamondslab/hardhat-diamonds@npm:1.1.2"
+"@diamondslab/hardhat-diamonds@npm:^1.2.0":
+  version: 1.2.1
+  resolution: "@diamondslab/hardhat-diamonds@npm:1.2.1"
+  dependencies:
+    chalk: "npm:^4.1.2"
   peerDependencies:
-    "@diamondslab/diamonds": ^1.0.0
+    "@diamondslab/diamonds": ^1.4.0
     ethers: ^6.0.0
     hardhat: ^2.0.0
-  checksum: 10c0/2bfad972ab69959e1fa2af8a734a55cfc8a7001a1f3820dfc0729677a5584798e00339aaa25bb68d758387e6011fddc34119239674c12fd42921a69e704a6685
+  checksum: 10c0/d031e9c24e1e7eae3dfa87a3e6cc9b33fcb176be626c6a2a49273331a3a5c1e234d741f092275f9cc322592b2d95046bb04fe8fbe94152a6664096ed0ac4572d
   languageName: node
   linkType: hard
 
