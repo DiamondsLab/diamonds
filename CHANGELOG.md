@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Legacy `.travis.yml` and `tslint.json`.
+- Unused runtime dependencies `axios` and `lodash` (clears the npm audit gate;
+  no import sites existed).
 
 ### Fixed
 
