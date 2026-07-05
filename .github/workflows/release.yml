@@ -47,8 +47,10 @@ jobs:
       # OIDC Trusted Publishing (configured on npmjs.com for DiamondsLab/diamonds):
       # no NPM_TOKEN — auth comes from the OIDC id-token; provenance is generated.
       - name: Publish (npm OIDC Trusted Publishing)
+        env:
+          NODE_AUTH_TOKEN: '' # setup-node can inject a placeholder default; any set token disables the OIDC exchange
         run: |
           echo "npm: $(npm --version)"
           echo "OIDC id-token URL present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+YES}"
           echo "registry: $(npm config get registry)"
-          npm publish --provenance --access public
+          npm publish --provenance --access public --loglevel http
