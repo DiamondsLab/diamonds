@@ -22,9 +22,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # registry-url is REQUIRED — without it, setup-node writes no .npmrc
-          # registry line and `npm publish` will not negotiate OIDC.
-          registry-url: https://registry.npmjs.org
+          # Do NOT set registry-url here: it makes setup-node write an .npmrc
+          # auth line with a placeholder NODE_AUTH_TOKEN, and npm then skips the
+          # OIDC trusted-publisher exchange entirely (PUT fails with a masked 404).
+          # npmjs.org is npm's default registry; OIDC needs no token config at all.
 
       # npm OIDC Trusted Publishing requires npm >= 11.5.1 (Node 20 ships npm 10).
       # Upgrade BEFORE corepack so a corepack `npm` shim can't shadow it.
